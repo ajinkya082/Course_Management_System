@@ -6,25 +6,27 @@ import { clerkWebhooks } from './controllers/webhooks.js'
 
 const app = express()
 
-// Connect DB (safe for serverless)
+// Connect DB
 connectDB()
 
-// Middlewares
-app.use(cors())
-app.use(express.json())
-
-// Routes
-app.get('/', (req, res) => {
-  res.send('API Working')
-})
-
-// Clerk webhook (RAW body required)
+// Clerk webhook MUST come BEFORE express.json()
 app.post(
   '/clerk',
   express.raw({ type: 'application/json' }),
   clerkWebhooks
 )
 
-// ❌ REMOVE app.listen()
-// ✅ EXPORT app for Vercel
-export default app
+// Other middlewares
+app.use(cors())
+app.use(express.json())
+
+// Test route
+app.get('/', (req, res) => {
+  res.send('API Working')
+})
+
+// ✅ START SERVER (THIS WAS MISSING)
+const PORT = process.env.PORT || 5000
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
