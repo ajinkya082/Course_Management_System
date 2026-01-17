@@ -9,14 +9,14 @@ const app = express()
 // Connect DB
 connectDB()
 
-// Clerk webhook MUST come BEFORE express.json()
+// Clerk webhook MUST be before express.json()
 app.post(
   '/clerk',
   express.raw({ type: 'application/json' }),
   clerkWebhooks
 )
 
-// Other middlewares
+// Middlewares for other routes
 app.use(cors())
 app.use(express.json())
 
@@ -25,8 +25,17 @@ app.get('/', (req, res) => {
   res.send('API Working')
 })
 
-// ✅ START SERVER (THIS WAS MISSING)
-const PORT = process.env.PORT || 5000
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+/* -------------------------------
+   ✅ LOCALHOST ONLY
+-------------------------------- */
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+  })
+}
+
+/* -------------------------------
+   ✅ VERCEL
+-------------------------------- */
+export default app
