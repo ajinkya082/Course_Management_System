@@ -1,19 +1,20 @@
-import express from "express";
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
-    {
-        _id:{type:String, required:true},
-        name:{type:String, required:true},
-        email:{type:String, required:true},
-        imageUrl:{type:String, required:true},
-        enrollCourses:[
-           {
-             type: mongoose.Schema.Types.ObjectId,
-            ref:'Course'
-        }
-        ],
-    },{timestamps:true})
-    const User = mongoose.model('User', userSchema )
+  {
+    _id: { type: String, required: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    imageUrl: { type: String, required: true },
+    enrolledCourses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course",
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
-    export default User
+// Prevent model overwrite error in Vercel
+export default mongoose.models.User || mongoose.model("User", userSchema);

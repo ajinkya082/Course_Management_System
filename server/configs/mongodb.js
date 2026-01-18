@@ -1,10 +1,17 @@
 import mongoose from "mongoose";
 
-//Connect to mongoDB database
+let isConnected = false;
 
-const connectDB =  async () =>{
-    mongoose.connection.on('connected',() =>console.log('Database Connected'))
+const connectDB = async () => {
+  if (isConnected) return;
 
-    await mongoose.connect(`${process.env.MONGO_URI}/learnifyDB`)
-}
-export default connectDB
+  try {
+    await mongoose.connect(`${process.env.MONGO_URI}/learnifyDB`);
+    isConnected = true;
+    console.log("MongoDB Connected");
+  } catch (error) {
+    console.error("MongoDB connection error:", error.message);
+  }
+};
+
+export default connectDB;

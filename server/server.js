@@ -6,25 +6,21 @@ import { clerkWebhooks } from './controllers/webhooks.js'
 
 const app = express()
 
-// Connect DB (safe for serverless)
+// Connect DB (serverless safe)
 connectDB()
 
-// Middlewares
 app.use(cors())
-app.use(express.json())
 
-// Routes
+// ❗ DO NOT use express.json() globally for Clerk
 app.get('/', (req, res) => {
   res.send('API Working')
 })
 
-// Clerk webhook (RAW body required)
+// Clerk webhook MUST use RAW body
 app.post(
   '/clerk',
   express.raw({ type: 'application/json' }),
   clerkWebhooks
 )
 
-// ❌ REMOVE app.listen()
-// ✅ EXPORT app for Vercel
 export default app
