@@ -6,7 +6,7 @@ const connectDB = async () => {
   if (isConnected) return;
 
   try {
-    await mongoose.connect(`${process.env.MONGO_URI}/learnifyDB`);
+    await mongoose.connect(`${process.env.MONGO_URI}/learnify`);
     isConnected = true;
     console.log("MongoDB Connected");
   } catch (error) {
