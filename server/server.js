@@ -6,21 +6,24 @@ import { clerkWebhooks } from './controllers/webhooks.js'
 
 const app = express()
 
-// Connect DB (serverless safe)
+// Connect DB
 connectDB()
 
 app.use(cors())
 
-// ❗ DO NOT use express.json() globally for Clerk
-app.get('/', (req, res) => {
-  res.send('API Working')
-})
-
-// Clerk webhook MUST use RAW body
+// 🔐 Clerk webhook (RAW body)
 app.post(
   '/clerk',
   express.raw({ type: 'application/json' }),
   clerkWebhooks
 )
+
+// ✅ JSON parser for normal APIs
+app.use(express.json())
+
+// Test route
+app.get('/', (req, res) => {
+  res.send('API Working')
+})
 
 export default app
