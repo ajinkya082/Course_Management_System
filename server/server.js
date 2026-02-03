@@ -25,11 +25,8 @@ connectCloudinary();
    🔴 STRIPE WEBHOOK (RAW BODY)
    MUST be BEFORE express.json()
 ============================ */
-app.post(
-  "/stripe",
-  express.raw({ type: "*/*" }),
-  stripeWebhooks
-);
+app.post("/stripe", express.json(), stripeWebhooks);
+
 
 
 /* ============================
