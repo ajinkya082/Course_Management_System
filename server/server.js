@@ -67,7 +67,7 @@ app.use("/api/user", userRouter);
    TEST ROUTE
 ===================================================== */
 app.get("/", (req, res) => {
-  res.json({ success: true, message: "API Working 🚀" });
+  res.json('API Working ');
 });
 
 /* =====================================================
