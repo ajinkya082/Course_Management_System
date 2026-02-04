@@ -3,15 +3,48 @@ import { assets } from '../../assets/assets'
 import { Link, useLocation } from 'react-router-dom'
 import { useClerk, UserButton, useUser } from '@clerk/clerk-react'
 import { AppContext } from '../../context/AppContext'
+import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const Navbar = () => {
-  const { navigate, isEducator } = useContext(AppContext)
+  const { navigate, isEducator,backendURL,setIsEducator, getToken  } = useContext(AppContext)
   const location = useLocation()
 
   const isCourseListPage = location.pathname.startsWith('/course-list')
 
   const { openSignIn } = useClerk()
   const { user } = useUser()
+
+  const becomeEducator = async () => {
+  try {
+    if (isEducator) {
+      navigate('/educator')
+      return
+    }
+
+    const token = await getToken()
+
+    const { data } = await axios.put(
+      backendURL + '/api/educator/update-role',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    if (data.success) {
+      setIsEducator(true)
+      toast.success(data.message)
+    } else {
+      toast.error(data.message)
+    }
+  } catch (error) {
+    toast.error(error.response?.data?.message || error.message)
+  }
+}
+
 
   return (
     <div
@@ -32,7 +65,7 @@ const Navbar = () => {
         <div className="flex items-center gap-5">
           {user && (
             <>
-              <button onClick={() => navigate('/educator')}>
+              <button onClick={becomeEducator}>
                 {isEducator ? 'Educator Dashboard' : 'Become Educator'}
               </button>
               |
@@ -57,7 +90,7 @@ const Navbar = () => {
       <div className="md:hidden flex items-center gap-3 text-gray-500">
         {user && (
           <>
-            <button onClick={() => navigate('/educator')}>
+            <button onClick={becomeEducator}>
               {isEducator ? 'Dashboard' : 'Educator'}
             </button>
             |

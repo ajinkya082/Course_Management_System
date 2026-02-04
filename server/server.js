@@ -15,40 +15,39 @@ import { clerkMiddleware } from "@clerk/express";
 
 const app = express();
 
-/* ============================
+/* =====================================================
+   🔥 CORS — MUST BE FIRST
+===================================================== */
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+
+/* =====================================================
    DATABASE
-============================ */
+===================================================== */
 connectDB();
 connectCloudinary();
 
-/* ============================
-   🔴 STRIPE WEBHOOK (RAW BODY)
-   MUST be BEFORE express.json()
-============================ */
+/* =====================================================
+   STRIPE WEBHOOK
+===================================================== */
 app.post("/stripe", express.json(), stripeWebhooks);
 
-
-
-/* ============================
-   🔴 CLERK WEBHOOK (RAW BODY)
-============================ */
+/* =====================================================
+   CLERK WEBHOOK
+===================================================== */
 app.post(
   "/clerk",
   express.raw({ type: "application/json" }),
   clerkWebhooks
 );
 
-/* ============================
+/* =====================================================
    GLOBAL MIDDLEWARES
-============================ */
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-  })
-);
-
-// ⛔ IMPORTANT: AFTER webhooks only
+===================================================== */
 app.use(express.json());
 
 app.use(
@@ -57,26 +56,26 @@ app.use(
   })
 );
 
-/* ============================
+/* =====================================================
    ROUTES
-============================ */
+===================================================== */
 app.use("/api/educator", educatorRouter);
 app.use("/api/course", courseRouter);
 app.use("/api/user", userRouter);
 
-/* ============================
+/* =====================================================
    TEST ROUTE
-============================ */
+===================================================== */
 app.get("/", (req, res) => {
-  res.status(200).send("API Working 🚀");
+  res.json({ success: true, message: "API Working 🚀" });
 });
 
-/* ============================
+/* =====================================================
    SERVER START
-============================ */
+===================================================== */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
 
 export default app;

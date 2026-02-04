@@ -1,51 +1,131 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { AppContext } from '../../context/AppContext'
 import Loading from '../../components/student/Loading'
+import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const MyCourses = () => {
-
-  const { currency, allCourses } = useContext(AppContext)
+  const { currency, backendURL, isEducator, getToken } = useContext(AppContext)
 
   const [courses, setCourses] = useState(null)
+  const fetchedRef = useRef(false)
 
   const fetchEducatorCourse = async () => {
-    setCourses(allCourses)
-  }
-  useEffect(() => {
-    fetchEducatorCourse()
-  }, [])
+    try {
+      const token = await getToken()
 
-  return courses ? (
-    <div className='h-screen flex flex-col items-start justify-between md:p-8
-    md:pb-0 p-4 pt-8 pb-0'>
-      <div className='w-full'>
-        <h2 className='pb-4 text-lg font-medium'>My Course</h2>
-        <div className='flex flex-col items-center max-w-4xl w-full coverflow-hidden
-        rounded-md bg-white border border-gray-500/20'>
-          <table className='md:table-auto table-fixed w-full overflow-hidden'>
-            <thead className="text-gray-900 border-b border-gray-500/20 text-sm
-              text-left">
+      const { data } = await axios.get(
+        `${backendURL}/api/educator/courses`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (data.success) {
+        // Deduplicate for safety
+        const uniqueCourses = Array.from(
+          new Map((data.courses || []).map(c => [c._id, c])).values()
+        )
+        setCourses(uniqueCourses)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
+  useEffect(() => {
+    if (isEducator && !fetchedRef.current) {
+      fetchedRef.current = true
+      fetchEducatorCourse()
+    }
+  }, [isEducator])
+
+  if (!courses) return <Loading />
+
+  return (
+    <div className="min-h-screen bg-gray-50 md:p-10 p-4">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+          My Courses
+        </h2>
+
+        <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+          <table className="w-full table-auto">
+            <thead className="bg-gray-100 text-gray-700 text-sm uppercase">
               <tr>
-                <th className="px-4 py-3 font-semibold truncate">All Courses</th>
-                <th className="px-4 py-3 font-semibold truncate">Earnings</th>
-                <th className="px-4 py-3 font-semibold truncate">Students</th>
-                <th className="px-4 py-3 font-semibold truncate">Published On</th>
+                <th className="px-6 py-4 text-left">All Courses</th>
+                <th className="px-6 py-4 text-left">Earnings</th>
+                <th className="px-6 py-4 text-left">Students</th>
+                <th className="px-6 py-4 text-left">Published On</th>
               </tr>
             </thead>
-            <tbody className="text-sm text-gray-500">
-              {courses.map((course)=>(
-                <tr key={course._id} className='border-b border-gray-500/20'>
-                  <td className='md:px-4 pl-2 md:pl-4 py-3 flex items-center
-                  space-x-3 truncate'>
-                    <img src={course.courseThumbnail} alt="course image" 
-                    className='w-16'/>
-                    <span className='truncate hidden md:block'>{course.courseTitle}</span>
+
+            <tbody className="text-sm text-gray-600">
+              {courses.length === 0 && (
+                <tr>
+                  <td colSpan="4" className="text-center py-12 text-gray-400">
+                    No courses found
                   </td>
-                  <td className='px-4 py-3'>{currency}{Math.floor(course.
-                  enrolledStudents.length * (course.coursePrice-course.discount * course.coursePrice/100))}</td>
-                    <td className='px-4 py-3'>{course.enrolledStudents.length}</td>
-                    <td className='px-4 py-3'>
-                      {new Date(course.createdAt).toLocaleDateString()}</td>
+                </tr>
+              )}
+
+              {courses.map(course => (
+                <tr
+                  key={course._id}
+                  className="
+                    group
+                    border-b last:border-none
+                    transition-all duration-300 ease-out
+                    hover:scale-[1.015]
+                    hover:-translate-y-1
+                    hover:shadow-xl
+                    hover:bg-white
+                  "
+                >
+                  {/* Course */}
+                  <td className="px-6 py-5 flex items-center gap-5">
+                    <div className="overflow-hidden rounded-lg w-24 h-14 bg-gray-200">
+                      {course.courseThumbnail && (
+                        <img
+                          src={course.courseThumbnail}
+                          alt="course"
+                          className="
+                            w-full h-full object-cover
+                            transition-transform duration-300 ease-out
+                            group-hover:scale-110
+                          "
+                        />
+                      )}
+                    </div>
+
+                    <span className="font-medium text-gray-800 truncate">
+                      {course.courseTitle}
+                    </span>
+                  </td>
+
+                  {/* Earnings */}
+                  <td className="px-6 py-5 font-semibold text-green-600">
+                    {currency}
+                    {Math.floor(
+                      (course.enrolledStudents?.length || 0) *
+                        (course.coursePrice -
+                          (course.discount * course.coursePrice) / 100)
+                    )}
+                  </td>
+
+                  {/* Students */}
+                  <td className="px-6 py-5">
+                    {course.enrolledStudents?.length || 0}
+                  </td>
+
+                  {/* Date */}
+                  <td className="px-6 py-5">
+                    {course.createdAt
+                      ? new Date(course.createdAt).toLocaleDateString()
+                      : '—'}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -53,7 +133,7 @@ const MyCourses = () => {
         </div>
       </div>
     </div>
-  ) : <Loading />
+  )
 }
 
 export default MyCourses
